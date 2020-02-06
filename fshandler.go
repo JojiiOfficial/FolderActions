@@ -58,6 +58,12 @@ func eventToScriptPath(dir, event string) string {
 
 func handleEvent(dir string, event fsnotify.Event) {
 	name := event.Name
+
+	if checkfile(dir, name) {
+		fmt.Printf("File %s contains insecure char! use --allow-unsafe to allow this file!", dir+name)
+		return
+	}
+
 	var scriptFile string
 	if event.Op&fsnotify.Create == fsnotify.Create {
 		if verbose && !quiet {
@@ -83,4 +89,18 @@ func handleEvent(dir string, event fsnotify.Event) {
 
 func runScript(scriptFile, name string) error {
 	return exec.Command(scriptFile, name).Start()
+}
+
+//returns true if name or dir contains critical chars
+func checkfile(dir, name string) bool {
+	if allowUnsafe {
+		return false
+	}
+	ccl := []string{"!", "#", ";", "`", "\\", "|", "$", "(", ")", "{", "}", ":"}
+	for _, cc := range ccl {
+		if strings.Contains(dir, cc) || strings.Contains(name, cc) {
+			return true
+		}
+	}
+	return false
 }

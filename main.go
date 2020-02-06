@@ -12,8 +12,10 @@ import (
 
 var (
 	//OS args
-	folders        []string
-	verbose, quiet bool
+	folders     []string
+	verbose     bool
+	quiet       bool
+	allowUnsafe bool
 
 	//path data
 	scriptPath string
@@ -27,6 +29,7 @@ func init() {
 	a := kingpin.Flag("dir", "The list of directories to watch").HintAction(listCurrFolders).Short('d').Strings()
 	v := kingpin.Flag("verbose", "Increase debug message").Short('v').Bool()
 	q := kingpin.Flag("quiet", "Don't output messages").Short('q').Bool()
+	aus := kingpin.Flag("allow-unsafe", "Allow special characters in path and filename").Short('a').Bool()
 	sp := kingpin.Flag("scripdir", "The folder containing the scripts").Short('s').HintAction(listCurrFolders).String()
 	kingpin.Parse()
 
@@ -35,6 +38,7 @@ func init() {
 	}
 	verbose = *v
 	quiet = *q
+	allowUnsafe = *aus
 	if len(*sp) > 0 {
 		scriptPath = *sp
 	}
