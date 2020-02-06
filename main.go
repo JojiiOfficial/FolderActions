@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -71,13 +72,25 @@ func main() {
 		return
 	}
 
+	if !strings.HasSuffix(scriptPath, "/") {
+		scriptPath += "/"
+	}
+
+	if !strings.HasPrefix(scriptPath, "/") {
+		sp := scriptPath
+		if strings.HasPrefix(sp, "./") {
+			sp = sp[2:]
+		}
+		scriptPath = getCurrPath() + sp
+	}
+
 	if verbose && !quiet {
 		fmt.Println("ScriptPath:", scriptPath)
 	}
 
 	if len(folders) > 0 {
 		for _, dir := range folders {
-			go startWatcher(dir, scriptPath)
+			go startWatcher(dir)
 		}
 
 		for {
