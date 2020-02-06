@@ -26,6 +26,7 @@ func init() {
 	a := kingpin.Flag("dir", "The list of directories to watch").HintAction(listCurrFolders).Short('d').Strings()
 	v := kingpin.Flag("verbose", "Increase debug message").Short('v').Bool()
 	q := kingpin.Flag("quiet", "Don't output messages").Short('q').Bool()
+	sp := kingpin.Flag("scripdir", "The folder containing the scripts").Short('s').HintAction(listCurrFolders).String()
 	kingpin.Parse()
 
 	for _, e := range *a {
@@ -33,6 +34,9 @@ func init() {
 	}
 	verbose = *v
 	quiet = *q
+	if len(*sp) > 0 {
+		scriptPath = *sp
+	}
 }
 
 func getCurrPath() string {
@@ -47,13 +51,30 @@ func getCurrPath() string {
 }
 
 func main() {
-	envvar := os.Getenv(envVarScriptPath)
-	if len(envvar) > 0 {
-		scriptPath = envvar
+	if len(scriptPath) == 0 {
+		envvar := os.Getenv(envVarScriptPath)
+		if len(envvar) > 0 {
+			scriptPath = envvar
+		} else {
+			scriptPath = getCurrPath() + "scripts/"
+		}
 	} else {
-		scriptPath = getCurrPath() + "scripts/"
-		createDirIfNotExists(scriptPath)
+		s, err := os.Stat(scriptPath)
+		if err == nil && !s.IsDir() {
+			fmt.Println("Error! Given ScriptDir is no dir!")
+			os.Exit(1)
+			return
+		}
 	}
+	if err := createDirIfNotExists(scriptPath); err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	if verbose && !quiet {
+		fmt.Println("ScriptPath:", scriptPath)
+	}
+
 	if len(folders) > 0 {
 		for _, dir := range folders {
 			go startWatcher(dir, scriptPath)
