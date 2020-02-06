@@ -88,7 +88,15 @@ func handleEvent(dir string, event fsnotify.Event) {
 }
 
 func runScript(scriptFile, name string) error {
-	return exec.Command(scriptFile, name).Start()
+	exec := exec.Command(scriptFile, name)
+	out, err := exec.Output()
+	if err == nil && verbose {
+		s := string(out)
+		if len(s) > 0 && s != "\n" {
+			fmt.Println(s)
+		}
+	}
+	return err
 }
 
 //returns true if name or dir contains critical chars
